@@ -381,7 +381,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = R4MX2B96J2;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = SideButtonFixer/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = External;
+				INFOPLIST_FILE = SideButtonFixer/Swift/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.archagon.sensible-side-buttons.swift";
@@ -406,7 +408,9 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = R4MX2B96J2;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = SideButtonFixer/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = External;
+				INFOPLIST_FILE = SideButtonFixer/Swift/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.archagon.sensible-side-buttons.swift";
