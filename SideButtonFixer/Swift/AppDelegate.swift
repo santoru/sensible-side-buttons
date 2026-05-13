@@ -58,8 +58,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func checkMacOSVersion() {
         let version = ProcessInfo.processInfo.operatingSystemVersion
-        // Tested on 10.13–15.x; warn on anything newer
-        let maxTestedMajor = 15
+        // Tested on 10.13–26.x; warn on anything newer
+        let maxTestedMajor = 26
         if version.majorVersion > maxTestedMajor {
             let alert = NSAlert()
             alert.messageText = "Untested macOS Version"
