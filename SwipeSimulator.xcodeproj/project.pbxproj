@@ -385,7 +385,7 @@
 				HEADER_SEARCH_PATHS = External;
 				INFOPLIST_FILE = SideButtonFixer/Swift/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.archagon.sensible-side-buttons.swift";
 				PRODUCT_NAME = SensibleSideButtons;
 				SWIFT_OBJC_BRIDGING_HEADER = "SideButtonFixer/Swift/BridgingHeader.h";
@@ -412,7 +412,7 @@
 				HEADER_SEARCH_PATHS = External;
 				INFOPLIST_FILE = SideButtonFixer/Swift/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.archagon.sensible-side-buttons.swift";
 				PRODUCT_NAME = SensibleSideButtons;
 				SWIFT_OBJC_BRIDGING_HEADER = "SideButtonFixer/Swift/BridgingHeader.h";
