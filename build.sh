@@ -12,7 +12,7 @@ echo "==> Building $APP_NAME ($CONFIG)..."
 
 xcodebuild \
     -project SwipeSimulator.xcodeproj \
-    -target SideButtonFixer \
+    -target SensibleSideButtons \
     -configuration "$CONFIG" \
     -arch arm64 -arch x86_64 \
     SYMROOT="$BUILD_DIR" \
