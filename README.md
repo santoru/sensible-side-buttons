@@ -1,6 +1,17 @@
-<img src="icon.png" width=150 />
+<p align="center">
+  <img src="icon.png" width="150" />
+</p>
 
-# SensibleSideButtons
+<h1 align="center">SensibleSideButtons</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS%2011%2B-blue" alt="Platform" />
+  <img src="https://img.shields.io/badge/swift-5.9-orange" alt="Swift" />
+  <img src="https://img.shields.io/github/v/release/santoru/sensible-side-buttons?label=release" alt="Release" />
+  <img src="https://img.shields.io/github/actions/workflow/status/santoru/sensible-side-buttons/release.yml?branch=master" alt="Build" />
+  <img src="https://img.shields.io/badge/license-GPLv2-green" alt="License" />
+  <img src="https://img.shields.io/badge/network-none-brightgreen" alt="No network" />
+</p>
 
 macOS mostly ignores the M4/M5 mouse buttons, commonly used for navigation. Third-party apps can bind them to ⌘+[ and ⌘+], but this only works in a small number of apps and feels janky. With this tool, your side buttons will simulate 3-finger swipes, allowing you to navigate almost any window with a history. As seen in the Logitech MX Master!
 
@@ -68,6 +79,8 @@ In Xcode, select the **SensibleSideButtonsSwift** scheme and build. The target i
 3. Launch it — grant Accessibility permission when prompted
 4. (Optional) Add to Login Items for auto-start:
    - System Settings → General → Login Items → add the app
+
+> **Note:** The GitHub Releases build is not notarized. macOS Gatekeeper may show a warning ("app is damaged" or "unidentified developer"). To bypass, right-click the app → Open, or run `xattr -cr SensibleSideButtons.app` after unzipping.
 
 ## License
 
