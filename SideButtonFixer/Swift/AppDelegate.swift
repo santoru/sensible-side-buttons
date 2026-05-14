@@ -2,13 +2,13 @@
 // GPLv2
 
 import Cocoa
-import Carbon.HIToolbox
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     fileprivate var tap: CFMachPort?
     private var tccTimer: Timer?
-    private var hotKeyRef: EventHotKeyRef?
+    private var globalHotKeyMonitor: Any?
+    private var localHotKeyMonitor: Any?
 
     // Published state for SwiftUI menu
     @objc dynamic var isEnabled = true
@@ -17,6 +17,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Gesture synthesis feedback
     private var flashWorkItem: DispatchWorkItem?
+
+    // Event tap re-enable backoff
+    private var tapReEnableCount = 0
+    private var tapReEnableLastTime: TimeInterval = 0
 
     // MARK: - Lifecycle
 
@@ -84,15 +88,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
 
         let enableItem = NSMenuItem(title: "Enabled", action: #selector(toggleEnabled), keyEquivalent: "e")
+        enableItem.tag = 1
         enableItem.setAccessibilityLabel("Toggle side button swipe enabled")
         menu.addItem(enableItem)
         menu.addItem(.separator())
 
         let mouseDownItem = NSMenuItem(title: "Trigger on Mouse Down", action: #selector(toggleMouseDown), keyEquivalent: "")
+        mouseDownItem.tag = 2
         mouseDownItem.setAccessibilityLabel("Toggle trigger on mouse down or up")
         menu.addItem(mouseDownItem)
 
         let swapItem = NSMenuItem(title: "Swap Buttons", action: #selector(toggleSwap), keyEquivalent: "")
+        swapItem.tag = 3
         swapItem.setAccessibilityLabel("Swap back and forward button assignment")
         menu.addItem(swapItem)
 
@@ -134,18 +141,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func refreshMenu() {
         guard let menu = statusItem.menu else { return }
-        // Enabled
-        if let item = menu.items.first(where: { $0.title == "Enabled" }) {
-            item.state = (tap != nil) ? .on : .off
-        }
-        // Trigger on Mouse Down
-        if let item = menu.items.first(where: { $0.title == "Trigger on Mouse Down" }) {
-            item.state = triggerOnMouseDown ? .on : .off
-        }
-        // Swap Buttons
-        if let item = menu.items.first(where: { $0.title == "Swap Buttons" }) {
-            item.state = swapButtons ? .on : .off
-        }
+        menu.item(withTag: 1)?.state = (tap != nil) ? .on : .off
+        menu.item(withTag: 2)?.state = triggerOnMouseDown ? .on : .off
+        menu.item(withTag: 3)?.state = swapButtons ? .on : .off
     }
 
     // MARK: - Failure Feedback (#3)
@@ -198,14 +196,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func promptAccessibility() {
-        let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
     }
 
     // MARK: - TCC Monitoring (#11)
 
     private func startTCCTimer() {
-        tccTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+        tccTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             if !AXIsProcessTrusted() && self.tap != nil {
                 self.stopTap()
@@ -216,27 +214,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Global Hotkey (#9) — ⌘⇧B
 
     private func registerGlobalHotKey() {
-        let hotKeyID = EventHotKeyID(signature: OSType(0x53534231), // "SSB1"
-                                      id: 1)
-        var ref: EventHotKeyRef?
-        // ⌘⇧B = kVK_ANSI_B (11), modifiers: cmdKey | shiftKey
-        let status = RegisterEventHotKey(UInt32(kVK_ANSI_B),
-                                         UInt32(cmdKey | shiftKey),
-                                         hotKeyID,
-                                         GetApplicationEventTarget(),
-                                         0,
-                                         &ref)
-        if status == noErr {
-            hotKeyRef = ref
-        }
+        let flags: NSEvent.ModifierFlags = [.command, .shift]
+        let keyCode: UInt16 = 11 // kVK_ANSI_B
 
-        // Install Carbon event handler
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
-                                      eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), hotKeyHandler, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), nil)
+        globalHotKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == keyCode && event.modifierFlags.intersection(.deviceIndependentFlagsMask) == flags {
+                self?.toggleMenuBarVisibility()
+            }
+        }
+        localHotKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == keyCode && event.modifierFlags.intersection(.deviceIndependentFlagsMask) == flags {
+                self?.toggleMenuBarVisibility()
+                return nil
+            }
+            return event
+        }
     }
 
-    fileprivate func toggleMenuBarVisibility() {
+    private func toggleMenuBarVisibility() {
         statusItem.isVisible.toggle()
     }
 
@@ -286,10 +281,21 @@ private func mouseCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGE
     guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
     let delegate = Unmanaged<AppDelegate>.fromOpaque(refcon).takeUnretainedValue()
 
-    // Re-enable tap if OS disabled it
+    // Re-enable tap if OS disabled it (with backoff)
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
         if let tap = delegate.tap {
-            CGEvent.tapEnable(tap: tap, enable: true)
+            let now = ProcessInfo.processInfo.systemUptime
+            if now - delegate.tapReEnableLastTime < 5 {
+                delegate.tapReEnableCount += 1
+            } else {
+                delegate.tapReEnableCount = 0
+            }
+            delegate.tapReEnableLastTime = now
+
+            if delegate.tapReEnableCount < 5 {
+                CGEvent.tapEnable(tap: tap, enable: true)
+            }
+            // If disabled 5+ times within 5s, stop retrying — system is rejecting us
         }
         return Unmanaged.passUnretained(event)
     }
@@ -321,9 +327,3 @@ private func mouseCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGE
     return Unmanaged.passUnretained(event)
 }
 
-private func hotKeyHandler(nextHandler: EventHandlerCallRef?, event: EventRef?, userData: UnsafeMutableRawPointer?) -> OSStatus {
-    guard let userData = userData else { return OSStatus(eventNotHandledErr) }
-    let delegate = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
-    delegate.toggleMenuBarVisibility()
-    return noErr
-}

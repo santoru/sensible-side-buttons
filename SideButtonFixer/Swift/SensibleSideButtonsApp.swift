@@ -4,7 +4,6 @@
 
 import Cocoa
 import SwiftUI
-import Carbon.HIToolbox
 
 @main
 struct SensibleSideButtonsApp: App {

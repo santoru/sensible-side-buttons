@@ -4,17 +4,11 @@
 import Foundation
 import CoreGraphics
 
-enum SwipeDirection {
-    case left, right, up, down
-
-    var rawValue: UInt32 {
-        switch self {
-        case .up: return 1
-        case .down: return 2
-        case .left: return 4
-        case .right: return 8
-        }
-    }
+enum SwipeDirection: UInt32 {
+    case up = 1
+    case down = 2
+    case left = 4
+    case right = 8
 }
 
 enum GestureSynthesizer {
