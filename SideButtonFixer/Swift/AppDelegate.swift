@@ -19,8 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var flashWorkItem: DispatchWorkItem?
 
     // Event tap re-enable backoff
-    private var tapReEnableCount = 0
-    private var tapReEnableLastTime: TimeInterval = 0
+    fileprivate var tapReEnableCount = 0
+    fileprivate var tapReEnableLastTime: TimeInterval = 0
 
     // MARK: - Lifecycle
 
